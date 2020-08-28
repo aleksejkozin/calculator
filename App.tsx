@@ -1,63 +1,102 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
-import React from 'react';
+import React, {useState} from 'react';
 import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
   Button,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-import {NUMPAD_KEYS} from './src/utils';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {listToNumber, numberToList, NUMPAD_KEYS} from './src/utils';
 import {map} from 'ramda';
 
-declare const global: {HermesInternal: null | {}};
-
-function Numpad() {
+function Numpad({onPress}: any) {
   function keyToButton(key: string) {
-    return <Button testID={key} key={key} title={key} onPress={() => null} />;
+    return (
+      <Button testID={key} key={key} title={key} onPress={() => onPress(key)} />
+    );
   }
 
   return <>{map(keyToButton, NUMPAD_KEYS)}</>;
 }
 
-function NewComponent() {
-  return (
-    <>
-      <Text testID={'total'}>0.00</Text>
-      <Numpad />
-    </>
-  );
-}
+function CalculatorSection({onPress, input}: any) {
+  function formatTotal(x: number) {
+    return x.toFixed(2);
+  }
 
-function CalculatorSection() {
   return (
     <View style={styles.sectionContainer}>
-      <Text testID={'total'}>0.00</Text>
-      <Numpad />
+      <Text testID={'total'}>{formatTotal(input)}</Text>
+      <Numpad onPress={onPress} />
     </View>
   );
 }
 
 const App = () => {
+  const [registers, setRegisters] = useState({
+    reg1: [],
+    reg2: [],
+    op: undefined,
+  });
+
+  const addKeyToState = (key: string) => (state: any) => {
+    return {...state, reg1: [...state.reg1, key]};
+  };
+
+  function pushMinusToState(state: any) {
+    return {
+      ...state,
+      reg1: [],
+      reg2: state.reg1,
+      op: (a: string[], b: string[]) =>
+        numberToList(listToNumber(b) - listToNumber(a)),
+    };
+  }
+
+  function pushPlusToState(state: any) {
+    return {
+      ...state,
+      reg1: [],
+      reg2: state.reg1,
+      op: (a: string[], b: string[]) =>
+        numberToList(listToNumber(a) + listToNumber(b)),
+    };
+  }
+
+  function concludeState(state: any) {
+    if (!state.op) {
+      return state;
+    }
+    return {
+      ...state,
+      reg1: state.op(state.reg1, state.reg2),
+      reg2: [],
+      op: undefined,
+    };
+  }
+
+  function onPress(key: string) {
+    if (key === '+') {
+      setRegisters(pushPlusToState);
+    } else if (key === '-') {
+      setRegisters(pushMinusToState);
+    } else if (key === '=') {
+      setRegisters(concludeState);
+    } else {
+      setRegisters(addKeyToState(key));
+    }
+  }
+
+  function selectInput() {
+    return listToNumber(
+      registers?.reg1?.length ? registers.reg1 : registers.reg2,
+    );
+  }
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
@@ -65,41 +104,7 @@ const App = () => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <CalculatorSection />
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.tsx</Text> to change
-                this screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
+          <CalculatorSection onPress={onPress} input={selectInput()} />
         </ScrollView>
       </SafeAreaView>
     </>
