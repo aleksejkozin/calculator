@@ -11,7 +11,7 @@ import {
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {listToNumber, numberToList, NUMPAD_KEYS} from './src/utils';
-import {map} from 'ramda';
+import {flip, identity, map} from 'ramda';
 
 function Numpad({onPress}: any) {
   function keyToButton(key: string) {
@@ -37,11 +37,13 @@ function CalculatorSection({onPress, input}: any) {
 }
 
 const App = () => {
-  const [registers, setRegisters] = useState({
+  const INITIAL_STATE = {
     reg1: [],
     reg2: [],
     op: undefined,
-  });
+  };
+
+  const [registers, setRegisters] = useState(INITIAL_STATE);
 
   const addKeyToState = (key: string) => (state: any) => {
     return {...state, reg1: [...state.reg1, key]};
@@ -52,6 +54,7 @@ const App = () => {
       ...state,
       reg1: [],
       reg2: state.reg1,
+      swapArguments: false,
       op: (a: string[], b: string[]) =>
         numberToList(listToNumber(b) - listToNumber(a)),
     };
@@ -62,6 +65,7 @@ const App = () => {
       ...state,
       reg1: [],
       reg2: state.reg1,
+      swapArguments: false,
       op: (a: string[], b: string[]) =>
         numberToList(listToNumber(a) + listToNumber(b)),
     };
@@ -73,15 +77,24 @@ const App = () => {
     }
     return {
       ...state,
-      reg1: state.op(state.reg1, state.reg2),
-      reg2: [],
-      op: undefined,
+      reg1: (state.swapArguments ? flip : identity)(state.op)(
+        state.reg1,
+        state.reg2,
+      ),
+      reg2: state.swapArguments ? state.reg2 : state.reg1,
+      swapArguments: true,
     };
+  }
+
+  function reset() {
+    return INITIAL_STATE;
   }
 
   function onPress(key: string) {
     if (key === '+') {
       setRegisters(pushPlusToState);
+    } else if (key === 'AC') {
+      setRegisters(reset);
     } else if (key === '-') {
       setRegisters(pushMinusToState);
     } else if (key === '=') {

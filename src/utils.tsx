@@ -1,6 +1,11 @@
 import {map, range, toString} from 'ramda';
 
-export const NUMPAD_KEYS = map(toString, range(0, 10)).concat('+', '-', '=');
+export const NUMPAD_KEYS = map(toString, range(0, 10)).concat(
+  '+',
+  '-',
+  '=',
+  'AC',
+);
 
 export function numberToList(x: number) {
   return x.toFixed(2).replace('.', '').split('');

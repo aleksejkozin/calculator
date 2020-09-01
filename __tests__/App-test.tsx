@@ -83,4 +83,36 @@ describe('App', () => {
     pressKey('=');
     expectTotal(result);
   });
+
+  function applyOp(op: '-' | '+', value: number) {
+    pressKey(op);
+    enterNumber(value);
+    pressKey('=');
+  }
+
+  function repeatLastOp() {
+    pressKey('=');
+  }
+
+  it('should allow to reset state', function () {
+    applyOp('-', 0.09);
+    expectTotalNumber(-0.09);
+    pressKey('AC');
+    expectTotalNumber(0.0);
+    repeatLastOp();
+    expectTotalNumber(0.0);
+  });
+
+  it('should allow to repeat operations', function () {
+    applyOp('-', 0.09);
+    repeatLastOp();
+    expectTotalNumber(-0.18);
+    repeatLastOp();
+    expectTotalNumber(-0.27);
+
+    applyOp('+', 1.0);
+    expectTotalNumber(0.73);
+    repeatLastOp();
+    expectTotalNumber(1.73);
+  });
 });
