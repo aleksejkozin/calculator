@@ -1,5 +1,5 @@
-import 'react-native';
 import React from 'react';
+import 'react-native';
 import {map} from 'ramda';
 
 import {fireEvent, render, RenderAPI} from '@testing-library/react-native';
